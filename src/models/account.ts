@@ -1,4 +1,5 @@
 import * as db from '../services/db';
+import {ObjectID} from 'mongodb';
 
 export function create(user: any, initialBalance: number): Promise<any> {
     let account = {
@@ -14,4 +15,9 @@ export function create(user: any, initialBalance: number): Promise<any> {
 export function all(): Promise<any> {
     let collection = db.get().collection('accounts');
     return collection.find().toArray();
+}
+
+export function get(id: string): Promise<any> {
+    let collection = db.get().collection('accounts');
+    return collection.findOne({"_id": new ObjectID(id)});
 }
