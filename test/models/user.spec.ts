@@ -29,6 +29,9 @@ describe.only('User model tests', () => {
             })
             .then((result) => {
                 expect(result.length).to.equal(1);
+                expect(result[0].email).to.equal(user.email);
+                expect(result[0].firstName).to.equal(user.firstName);
+                expect(result[0].lastName).to.equal(user.lastName);
                 done();
             })
             .catch(done);

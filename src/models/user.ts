@@ -1,4 +1,4 @@
-import {ObjectID} from 'mongodb';
+import { ObjectID } from 'mongodb';
 
 export interface IUser {
     email: string;
@@ -20,8 +20,10 @@ export function create(user: IUser): Promise<any> {
 
 export function find(user: IUserSearchArgs): Promise<any> {
     return new Promise<any>((resolve, reject) => {
-        resolve({
-            length: 1
-        });
+        resolve([{
+            email: 'user@email.com',
+            firstName: 'James',
+            lastName: 'Bond'
+        }]);
     })
 }
