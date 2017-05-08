@@ -1,4 +1,5 @@
 import { ObjectID } from 'mongodb';
+import * as DB from '../services/db';
 
 export interface IUser {
     email: string;
@@ -14,16 +15,16 @@ export interface IUserSearchArgs {
 
 export function create(user: IUser): Promise<any> {
     return new Promise<any>((resolve, reject) => {
-        resolve(new ObjectID());
+        if (user.email && user.email.length > 1) {
+            let collection = DB.get().collection('users');
+            collection.insertOne(user).then(resolve).catch(reject);
+        } else {
+            reject(new Error('Email address is required!'));
+        }
     });
 }
 
 export function find(user: IUserSearchArgs): Promise<any> {
-    return new Promise<any>((resolve, reject) => {
-        resolve([{
-            email: 'user@email.com',
-            firstName: 'James',
-            lastName: 'Bond'
-        }]);
-    })
+    let collection =  DB.get().collection('users');
+    return collection.findOne(user);
 }
