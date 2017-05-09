@@ -20,7 +20,7 @@ describe.only('User model tests', () => {
             (function _loop(i) {
                 if (i < mockUsers.length) {
                     let user = mockUsers[i];
-                    User.create(user)
+                    User.create(user.email, user.firstName, user.lastName, user.password)
                         .then((result: mongo.InsertOneWriteOpResult) => {
                             return User.find({
                                 _id: result.insertedId
@@ -43,10 +43,11 @@ describe.only('User model tests', () => {
             let user: User.IUser = {
                 email: '',
                 firstName: 'John',
-                lastName: 'Doe'
+                lastName: 'Doe',
+                password: '12345'
             };
 
-            User.create(user)
+            User.create(user.email, user.firstName, user.lastName, user.password)
                 .then((id: mongo.ObjectID) => {
                     done(new Error('Should not create user'));
                 })
@@ -54,6 +55,89 @@ describe.only('User model tests', () => {
                     expect(err).to.be.an('error');
                     done();
                 });
+        });
+
+        it('should not create a user if password is missing', (done) => {
+            let user: User.IUser = {
+                email: 'john@doe.com',
+                firstName: 'John',
+                lastName: 'Doe',
+                password: ''
+            };
+
+            User.create(user.email, user.firstName, user.lastName, user.password)
+                .then(() => {
+                    done(new Error('Should not create user'));
+                })
+                .catch((err) => {
+                    expect(err).to.be.an('error');
+                    done();
+                })
+        });
+
+        it('should not store passwords as plaintext', (done) => {
+            (function _loop(i) {
+                if (i < mockUsers.length) {
+                    let user = mockUsers[i];
+                    User.create(user.email, user.firstName, user.lastName, user.password)
+                        .then((result: mongo.InsertOneWriteOpResult) => {
+                            return User.find({
+                                _id: result.insertedId
+                            });
+                        })
+                        .then((result: any) => {
+                            expect(result.password).to.not.equal(user.password);
+                            _loop(++i);
+                        })
+                        .catch(done);
+                } else {
+                    done();
+                }
+            })(0);
+        });
+
+        it('should match passwords after hashing', (done) => {
+            (function _loop(i) {
+                if (i < mockUsers.length) {
+                    let user = mockUsers[i];
+                    User.create(user.email, user.firstName, user.lastName, user.password)
+                        .then((result: mongo.InsertOneWriteOpResult) => {
+                            return User.find({
+                                _id: result.insertedId
+                            });
+                        })
+                        .then((result: any) => {
+                            let userPassword = User.hash(user.password, result.password.salt);
+                            expect(result.password.hash).to.equal(userPassword.hash);
+                            _loop(++i);
+                        })
+                        .catch(done);
+                } else {
+                    done();
+                }
+            })(0);
+        });
+
+        it('should not match a wrong password', (done) => {
+            let user: User.IUser = {
+                email: 'john@doe.com',
+                firstName: 'John',
+                lastName: 'Doe',
+                password: '12345'
+            };
+
+            User.create(user.email, user.firstName, user.lastName, user.password)
+                .then((result: mongo.InsertOneWriteOpResult) => {
+                    return User.find({
+                        _id: result.insertedId
+                    });
+                })
+                .then((result: any) => {
+                    let userPassword = User.hash('123456', result.password.salt);
+                    expect(result.password.hash).to.not.equal(userPassword.hash);
+                    done();
+                })
+                .catch(done);
         });
     });
 });
