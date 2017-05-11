@@ -34,9 +34,19 @@ export function create(email: string, firstName: string, lastName: string, passw
     });
 }
 
-export function find(user: IUserSearchArgs): Promise<any> {
+export function find(id: ObjectID): Promise<any> {
     let collection = DB.get().collection('users');
-    return collection.findOne(user);
+    return collection.findOne({_id: id});
+}
+
+export function all(): Promise<any> {
+    let collection = DB.get().collection('users');
+    return collection.find().toArray();
+}
+
+export function remove(id: ObjectID): Promise<any> {
+    let collection = DB.get().collection('users');
+    return collection.remove({_id: id});
 }
 
 function _getRandomString(length: number): string {

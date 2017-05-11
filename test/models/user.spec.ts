@@ -22,9 +22,7 @@ describe.only('User model tests', () => {
                     let user = mockUsers[i];
                     User.create(user.email, user.firstName, user.lastName, user.password)
                         .then((result: mongo.InsertOneWriteOpResult) => {
-                            return User.find({
-                                _id: result.insertedId
-                            });
+                            return User.find(result.insertedId);
                         })
                         .then((result: any) => {
                             expect(result.email).to.equal(user.email);
@@ -81,9 +79,7 @@ describe.only('User model tests', () => {
                     let user = mockUsers[i];
                     User.create(user.email, user.firstName, user.lastName, user.password)
                         .then((result: mongo.InsertOneWriteOpResult) => {
-                            return User.find({
-                                _id: result.insertedId
-                            });
+                            return User.find(result.insertedId);
                         })
                         .then((result: any) => {
                             expect(result.password).to.not.equal(user.password);
@@ -102,9 +98,7 @@ describe.only('User model tests', () => {
                     let user = mockUsers[i];
                     User.create(user.email, user.firstName, user.lastName, user.password)
                         .then((result: mongo.InsertOneWriteOpResult) => {
-                            return User.find({
-                                _id: result.insertedId
-                            });
+                            return User.find(result.insertedId);
                         })
                         .then((result: any) => {
                             let userPassword = User.hash(user.password, result.password.salt);
@@ -128,9 +122,7 @@ describe.only('User model tests', () => {
 
             User.create(user.email, user.firstName, user.lastName, user.password)
                 .then((result: mongo.InsertOneWriteOpResult) => {
-                    return User.find({
-                        _id: result.insertedId
-                    });
+                    return User.find(result.insertedId);
                 })
                 .then((result: any) => {
                     let userPassword = User.hash('123456', result.password.salt);
@@ -139,5 +131,48 @@ describe.only('User model tests', () => {
                 })
                 .catch(done);
         });
+
+        it('should create a 1000 users', (done) => {
+            (function _loop(i) {
+                if (i < mockUsers.length) {
+                    let user = mockUsers[i];
+                    User.create(user.email, user.firstName, user.lastName, user.password)
+                        .then((result: mongo.InsertOneWriteOpResult) => {
+                            _loop(++i);
+                        })
+                        .catch(done);
+                } else {
+                    User.all().then((result: any) => {
+                        expect(result.length).to.equal(mockUsers.length);
+                        done();                        
+                    });
+                }
+            })(0);
+        });
+
+        it('should remove 1 user', (done) => {
+            let userIdToRemove;
+            (function _loop(i) {
+                if (i < mockUsers.length) {
+                    let user = mockUsers[i];
+                    User.create(user.email, user.firstName, user.lastName, user.password)
+                        .then((result: mongo.InsertOneWriteOpResult) => {
+                            if (i === 0)
+                                userIdToRemove = result.insertedId;
+                            _loop(++i);
+                        })
+                        .catch(done);
+                } else {
+                    User.remove(userIdToRemove).then(() => {
+                        return User.all();             
+                    })
+                    .then((result) => {
+                        expect(result.length).to.equal(mockUsers.length - 1);
+                        done();
+                    })
+                    .catch(done);
+                }
+            })(0);
+        })
     });
 });
