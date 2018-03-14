@@ -1,4 +1,4 @@
-import { Schema, Types, model } from 'mongoose';
+import { Schema, model } from 'mongoose';
 
 const schema = new Schema({
     title: {
@@ -7,7 +7,7 @@ const schema = new Schema({
         unique: true
     },
     masterCategory: {
-        type: Types.ObjectId,
+        type: Schema.Types.ObjectId,
         ref: 'MasterCategory',
         required: true
     }

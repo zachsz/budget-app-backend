@@ -1,8 +1,8 @@
-import * as account from '../../src/models/account';
-import { expect } from 'chai';
+// import * as account from '../../src/models/account';
+// import { expect } from 'chai';
 
-describe('Account model tests', () => {
-    describe('account creation', () => {
+// describe('Account model tests', () => {
+//     describe('account creation', () => {
         
-    });
-});
+//     });
+// });

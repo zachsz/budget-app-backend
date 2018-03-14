@@ -6,14 +6,21 @@ import * as winston from 'winston';
 
 import config from './src/config';
 import imports from './src/controllers/import';
+import budget from './src/controllers/budget';
 
 const app = express();
 
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    next();
+})
 app.use(logger('combined'));
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 app.use('/import', imports);
+app.use('/budget', budget);
 
 const server = http.createServer(app);
 
@@ -21,7 +28,6 @@ server.on('listening', () => {
     console.log('Budgeting App Server running on port', config.port);
 });
 
-mongoose.connect(config.db);
 const db = mongoose.connection;
 
 db.on('error', winston.error.bind(winston, 'MongoDB connection error:'));

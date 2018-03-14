@@ -1,6 +1,12 @@
 import { Router, Request } from 'express';
 import * as Busboy from 'busboy';
 
+import MasterCategory from '../models/masterCategory';
+import SubCategory from '../models/subCategory';
+import BudgetEntry from '../models/budgetEntry';
+import masterCategory from '../models/masterCategory';
+import subCategory from '../models/subCategory';
+
 const router = Router();
 
 interface UploadBudgetReq extends Request {
@@ -25,7 +31,7 @@ router.post('/budget', (req: UploadBudgetReq, res, next) => {
     });
 
     req.pipe(busboy);
-}, (req: UploadBudgetReq, res) => {
+}, async (req: UploadBudgetReq, res) => {
     const lines = req.budget.toString().split(/(?:\r\n|\r|\n)/g);
 
     const keys = lines[0].replace(/(\")/g, '').replace(/ /g, '_').replace('\ufeff', '').toLowerCase().split(',');
@@ -52,57 +58,67 @@ router.post('/budget', (req: UploadBudgetReq, res, next) => {
     let currentMasterCatId = 0;
     let currentSubCatId = 0;
 
-    budgetData.forEach(entry => {
-        if (!months[entry.month]) {
-            months[entry.month] = {};
+    (function _loop(i) {
+        if (i < budgetData.length) {
+            let entry = budgetData[i];
+            if (entry.master_category) {
+                let masterCat: any;
+                let subCat: any;
+                MasterCategory.findOne({ title: entry.master_category })
+                    .then((masterCategory) => {
+                        if (masterCategory) {
+                            return masterCategory;
+                        } else {
+                            return MasterCategory.create({ title: entry.master_category });
+                        }
+                    })
+                    .then((masterCategory) => {
+                        masterCat = masterCategory;
+                        if (entry.sub_category) {
+                            return SubCategory.findOne({ title: entry.sub_category, masterCategory: masterCat._id });
+                        } else {
+                            return Promise.reject('no sub cat!');
+                        }
+                    })
+                    .then((subCategory) => {
+                        if (subCategory) {
+                            return subCategory;
+                        } else {
+                            return SubCategory.create({ title: entry.sub_category, masterCategory: masterCat._id })
+                        }
+                    })
+                    .then((subCategory) => {
+                        subCat = subCategory;
+                        // console.log('entry month???', !!entry.month);
+                        if (entry.month) {
+                            const budgeted = entry.budgeted || '£0.00';
+                            const outflows = entry.outflows || '£0.00';
+                            const balance = entry.balance || '£0.00';
+                            return BudgetEntry.create({
+                                month: entry.month,
+                                masterCategory: masterCat._id,
+                                subCategory: subCat._id,
+                                budgeted: budgeted.replace('£', ''),
+                                outflows: outflows.replace('£', ''),
+                                balance: balance.replace('£', '')
+                            })
+                        } else {
+                            return Promise.reject('no month!');
+                        }
+                    })
+                    .then((budgetEntry) => {
+                        _loop(++i);
+                    })
+                    .catch((err) => {
+                        _loop(++i);
+                    });
+            } else {
+                _loop(++i);
+            }
+        } else {
+            res.send('all done here...');
         }
-        if (!months[entry.month]['categories']) {
-            months[entry.month]['categories'] = {};
-        }
-
-        if (!months[entry.month]['categories'][entry.master_category]) {
-            months[entry.month]['categories'][entry.master_category] = {
-                id: currentMasterCatId.toString(),
-                title: entry.master_category
-            };
-            currentMasterCatId++;
-        }
-
-        if (!months[entry.month]['subCategories']) {
-            months[entry.month]['subCategories'] = {};
-        }
-        if (!months[entry.month]['subCategories'][entry.sub_category]) {
-            months[entry.month]['subCategories'][entry.sub_category] = {
-                id: currentSubCatId.toString(),
-                categoryId: months[entry.month]['categories'][entry.master_category].id,
-                title: entry.sub_category,
-                budgeted: parseFloat(entry.budgeted.replace('£', ''))
-            };
-            currentSubCatId++;
-        }
-    });
-
-    // budgetData.forEach((entry) => {
-    //     if (!categories[entry.master_category]) {
-    //         categories[entry.master_category] = {
-    //             id: currentMasterCatId.toString(),
-    //             name: entry.master_category
-    //         };
-    //         currentMasterCatId++;
-    //     }
-
-    //     if (!subCategories[entry.sub_category]) {
-    //         subCategories[entry.sub_category] = {
-    //             id: currentSubCatId.toString(),
-    //             categoryId: categories[entry.master_category].id,
-    //             title: entry.sub_category,
-    //             budgeted: parseFloat(entry.budgeted.replace('£', ''))
-    //         };
-    //     }
-    //     currentSubCatId++;
-    // });
-
-    res.send(months);
+    })(0);
 });
 
 export default router;
