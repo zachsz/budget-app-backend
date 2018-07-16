@@ -7,6 +7,7 @@ import * as winston from 'winston';
 import config from './src/config';
 import imports from './src/controllers/import';
 import budget from './src/controllers/budget';
+import masterCategories from './src/controllers/masterCategories';
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use(express.json());
 
 app.use('/import', imports);
 app.use('/budget', budget);
+app.use('/master-categories', masterCategories);
 
 const server = http.createServer(app);
 
