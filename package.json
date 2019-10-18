@@ -2,38 +2,24 @@
   "name": "budgeting-app",
   "version": "1.0.0",
   "description": "Simple budgeting up for keeping up with your expenses and incomes.",
-  "main": "build/index.js",
+  "main": "index.js",
   "scripts": {
-    "test": "set NODE_ENV=test&& mocha --require ts-node/register test/**/*.spec.ts",
-    "prestart": "tsc",
-    "start": "node build/index.js",
-    "dev": "nodemon -e ts --exec \"npm run start\""
+    "test": "set NODE_ENV=test&& mocha test/**/*.spec.ts",
+    "start": "node index.js",
+    "dev": "nodemon --exec \"npm run start\""
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "busboy": "^0.2.14",
     "express": "^4.15.0",
     "morgan": "^1.8.1",
-    "mysql": "^2.17.1",
-    "supertest": "^3.0.0",
-    "winston": "^2.4.1"
+    "mysql": "^2.16.0",
+    "winston": "^3.2.1"
   },
   "devDependencies": {
-    "@types/busboy": "^0.2.3",
-    "@types/chai": "^3.4.35",
-    "@types/express": "^4.0.35",
-    "@types/mocha": "^2.2.39",
-    "@types/mongoose": "^5.0.7",
-    "@types/morgan": "^1.7.32",
-    "@types/mysql": "^2.15.7",
-    "@types/node": "^7.0.5",
-    "@types/supertest": "^2.0.4",
-    "@types/winston": "^2.3.8",
-    "chai": "^3.5.0",
-    "mocha": "^3.2.0",
+    "chai": "^4.2.0",
+    "mocha": "^6.2.1",
     "nodemon": "^1.17.1",
-    "ts-node": "^5.0.1",
-    "typescript": "^2.2.1"
+    "supertest": "^4.0.2"
   }
 }
